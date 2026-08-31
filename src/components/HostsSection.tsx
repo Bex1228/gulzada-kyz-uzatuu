@@ -1,0 +1,1 @@
+import Reveal from'./Reveal';import Names from'./Names';export default function HostsSection(){return <Reveal className="section hosts"><div className="rule"/><p className="eyebrow">— ТОЙ ЭЭЛЕРИ —</p><Names/><p className="hostsNote">Ак ниеттен күткөн үй-бүлөңүздөр</p><div className="rule lower"/></Reveal>}

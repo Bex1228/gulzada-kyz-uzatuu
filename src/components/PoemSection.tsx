@@ -1,0 +1,1 @@
+import Reveal from'./Reveal';export default function PoemSection(){return <Reveal className="section poem"><div className="botanical" aria-hidden="true">❦</div><p>Эки жүрөк — бир тагдыр,<br/>Эки жол — бир өмүр.</p><div className="goldMark">◇</div><p>Бактылуу күндүн күбөсү болуп,<br/>Кубанычыбызды бирге бөлүшүңүздөр!</p></Reveal>}

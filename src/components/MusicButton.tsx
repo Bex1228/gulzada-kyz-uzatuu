@@ -1,0 +1,1 @@
+import{Music2,Pause}from'lucide-react';export default function MusicButton({playing,onClick}:{playing:boolean,onClick:()=>void}){return <button className={'music '+(playing?'playing':'')} onClick={onClick} aria-label={playing?'Музыканы токтотуу':'Музыканы ойнотуу'}>{playing?<Pause/>:<Music2/>}</button>}

@@ -1,0 +1,1 @@
+import Reveal from'./Reveal';import Names from'./Names';export default function FooterSection(){return <Reveal className="section footer"><div className="ornament">◇ ♡ ◇</div><h2>Сиздерди чыдамсыздык менен күтөбүз!</h2><Names/></Reveal>}
