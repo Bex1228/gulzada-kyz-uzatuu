@@ -2,64 +2,78 @@ import{useRef,useState}from'react';import HeroSection from'./components/HeroSect
 
 export default function App(){
   const audio=useRef<HTMLAudioElement>(null);
-  const shouldPlay=useRef(false);
+  const scrollFrame=useRef<number|null>(null);
   const[playing,setPlaying]=useState(false);
   const[opened,setOpened]=useState(false);
 
-  function smoothScrollToInvitation(){
-    const target=document.getElementById('invitation');
-    if(!target)return;
+  function startFullPageScroll(){
+    if(scrollFrame.current!==null)cancelAnimationFrame(scrollFrame.current);
+
     const start=window.scrollY;
-    const destination=start+target.getBoundingClientRect().top;
+    const destination=Math.max(0,document.documentElement.scrollHeight-window.innerHeight);
     const distance=destination-start;
-    const duration=2200;
+    if(distance<=0)return;
+
+    // Slow cinematic scroll through the entire invitation.
+    // Duration adapts to page height but stays deliberately slow.
+    const duration=Math.min(70000,Math.max(45000,distance*9));
     const started=performance.now();
-    const ease=(t:number)=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+
+    const ease=(t:number)=>{
+      if(t<.08)return .5*Math.pow(t/.08,2)*.08;
+      if(t>.92){
+        const x=(1-t)/.08;
+        return 1-.5*x*x*.08;
+      }
+      return .04+(t-.08)*(0.92/.84);
+    };
+
     const step=(now:number)=>{
       const progress=Math.min((now-started)/duration,1);
       window.scrollTo(0,start+distance*ease(progress));
-      if(progress<1)requestAnimationFrame(step);
+      if(progress<1)scrollFrame.current=requestAnimationFrame(step);
+      else scrollFrame.current=null;
     };
-    requestAnimationFrame(step);
+
+    scrollFrame.current=requestAnimationFrame(step);
   }
 
-  async function startMusic(){
+  async function playMusic(){
     const el=audio.current;
     if(!el)return;
-    shouldPlay.current=true;
     el.volume=.9;
-    try{await el.play();setPlaying(true)}catch{setPlaying(false)}
+    try{
+      await el.play();
+      setPlaying(true);
+    }catch{
+      setPlaying(false);
+    }
   }
 
   async function toggle(){
     const el=audio.current;
     if(!el)return;
-    if(!el.paused){
-      shouldPlay.current=false;
+    if(el.paused){
+      await playMusic();
+    }else{
       el.pause();
       setPlaying(false);
-    }else{
-      await startMusic();
     }
   }
 
   async function open(){
     if(opened)return;
     setOpened(true);
-    const el=audio.current;
-    if(el)el.currentTime=0;
-    await startMusic();
-    window.setTimeout(smoothScrollToInvitation,900);
-  }
 
-  function recoverPlayback(){
     const el=audio.current;
-    if(!el||!shouldPlay.current||el.ended)return;
-    window.setTimeout(()=>{
-      if(shouldPlay.current&&el.paused){
-        el.play().then(()=>setPlaying(true)).catch(()=>{});
-      }
-    },120);
+    if(el){
+      el.currentTime=0;
+      await playMusic();
+    }
+
+    // Let the envelope opening animation breathe, then begin the slow
+    // automatic journey from the top of the invitation to the very bottom.
+    window.setTimeout(startFullPageScroll,1400);
   }
 
   return <main className="invitationShell">
@@ -68,10 +82,11 @@ export default function App(){
       src="/music/music.mp3"
       preload="auto"
       loop
+      playsInline
       onPlay={()=>setPlaying(true)}
-      onPause={()=>{setPlaying(false);recoverPlayback()}}
-      onStalled={recoverPlayback}
-      onCanPlay={recoverPlayback}
+      onPause={()=>setPlaying(false)}
+      onEnded={()=>setPlaying(false)}
+      onError={()=>setPlaying(false)}
     />
     <MusicButton playing={playing} onClick={toggle}/>
     <HeroSection opened={opened} onOpen={open}/>
